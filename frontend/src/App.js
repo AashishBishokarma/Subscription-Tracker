@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { mockAPI } from './utils/mockAPI';
+import api from './api';
 import Header from './components/Header';
 import TabNavigation from './components/TabNavigation';
 import SubscriptionCard from './components/SubscriptionCard';
@@ -19,24 +19,30 @@ export default function App() {
 
   const loadData = async () => {
     setLoading(true);
-    const result = await mockAPI.getSubscriptions();
-    setSubscriptions(result.data);
-    const summaryData = mockAPI.getSummary(result.data);
-    setSummary(summaryData.data);
+    const subscriptionsResult = await api.get();
+    setSubscriptions(subscriptionsResult.data);
+    const summaryResult = await api.get('/summary');
+    setSummary(summaryResult.data);
     setLoading(false);
   };
 
   const handleAddSubscription = async (newSub) => {
-    const result = await mockAPI.addSubscription(newSub);
-    if (result.success) {
+    try {
+      await api.post(newSub);
       await loadData();
       setShowModal(false);
+    } catch (error) {
+      console.error('Error adding subscription:', error);
     }
   };
 
   const handleDeleteSubscription = async (id) => {
-    await mockAPI.deleteSubscription(id);
-    await loadData();
+    try {
+      await api.delete(id);
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting subscription:', error);
+    }
   };
 
   const filteredSubscriptions = activeTab === 'All' 
